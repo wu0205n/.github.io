@@ -3,62 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>嗨</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            background-color: #f9f9f9;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        .card {
-            display: inline-block;
-            width: 200px;
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 10px;
-            background: #f0f0f0;
-            text-align: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .number {
-            font-size: 36px;
-            font-weight: bold;
-            color: #3366cc;
-        }
-    </style>
 </head>
 <body>
-
     <h1>高雄科技大學 海事資訊科技系</h1>
 
     <h2>📘 專題名稱：跨網段靜態網站部署與展示</h2>
 
     <p><strong>成員：</strong>吳曜恩、郭晉銘、蕭傑睿、高煜欽</p>
-
-    <h3>📌 專題簡介</h3>
-    <p>
-        本專題旨在透過 Docker 與 GitHub Pages 技術，實現區網與跨網段皆可瀏覽的靜態網站平台。
-        利用簡單部署方式，提升網站公開性與教學展示效率。
-    </p>
-
-    <h3>📊 網站數據統計</h3>
-    <div class="card">
-        <div class="number" id="visitor-count">載入中...</div>
-        <div>總訪問人次</div>
-    </div>
-
-    <script>
-        fetch('https://api.countapi.xyz/hit/wu0205n.github.io/visits')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('visitor-count').innerText = data.value;
-            })
-            .catch(() => {
-                document.getElementById('visitor-count').innerText = "錯誤";
-            });
-    </script>
-
 </body>
 </html>
