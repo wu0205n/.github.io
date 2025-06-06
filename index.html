@@ -45,9 +45,20 @@
 
     <h3>📊 網站數據統計</h3>
     <div class="card">
-        <div class="number">152</div>
+        <div class="number" id="visitor-count">載入中...</div>
         <div>總訪問人次</div>
     </div>
+
+    <script>
+        fetch('https://api.countapi.xyz/hit/wu0205n.github.io/visits')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('visitor-count').innerText = data.value;
+            })
+            .catch(() => {
+                document.getElementById('visitor-count').innerText = "錯誤";
+            });
+    </script>
 
 </body>
 </html>
