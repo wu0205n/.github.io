@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Pages 靜態網站部署與展示</title>
+    <title>多地天氣展示</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -38,12 +38,10 @@
 <body>
 
     <h1>高雄科技大學 海事資訊科技系</h1>
-    <h2>專題名稱：GitHub Pages 靜態網站部署與展示</h2>
+    <h2>📘 專題名稱：GitHub Pages 靜態網站部署與展示</h2>
     <p><strong>成員：</strong>吳曜恩、郭晉銘、蕭傑睿、高煜欽</p>
 
     <div class="weather-grid">
-
-        <!-- 旗津 -->
         <div class="weather-box">
             <h3>📍 旗津區目前天氣：</h3>
             <p id="weather-now-qijin">載入中...</p>
@@ -53,7 +51,6 @@
             <p id="chart-update-qijin" class="update-time"></p>
         </div>
 
-        <!-- 中壢 -->
         <div class="weather-box">
             <h3>📍 中壢區目前天氣：</h3>
             <p id="weather-now-chungli">載入中...</p>
@@ -63,7 +60,6 @@
             <p id="chart-update-chungli" class="update-time"></p>
         </div>
 
-        <!-- 魚池鄉 -->
         <div class="weather-box">
             <h3>📍 魚池鄉目前天氣：</h3>
             <p id="weather-now-yuchi">載入中...</p>
@@ -72,57 +68,41 @@
             <canvas id="chart-yuchi"></canvas>
             <p id="chart-update-yuchi" class="update-time"></p>
         </div>
-
     </div>
 
     <script>
         const weatherText = {
-            0: "☀ 晴朗",
-            1: "🌤 大致晴朗",
-            2: "⛅ 多雲",
-            3: "☁ 陰天",
-            45: "🌫 霧",
-            48: "🌫 霧霾",
-            51: "🌦 毛毛雨",
-            61: "🌧 小雨",
-            63: "🌧 中雨",
-            65: "🌧 大雨",
-            71: "❄ 小雪",
-            80: "🌧 短暫陣雨",
-            95: "⛈ 雷雨"
+            0: "☀ 晴朗", 1: "🌤 大致晴朗", 2: "⛅ 多雲", 3: "☁ 陰天",
+            45: "🌫 霧", 48: "🌫 霧霾", 51: "🌦 毛毛雨", 61: "🌧 小雨",
+            63: "🌧 中雨", 65: "🌧 大雨", 71: "❄ 小雪", 80: "🌧 短暫陣雨", 95: "⛈ 雷雨"
         };
 
         const locations = [
-            {
-                name: "qijin",
-                label: "旗津區",
-                lat: 22.6086,
-                lon: 120.2719
-            },
-            {
-                name: "chungli",
-                label: "中壢區",
-                lat: 24.9547,
-                lon: 121.2260
-            },
-            {
-                name: "yuchi",
-                label: "魚池鄉",
-                lat: 23.8886,
-                lon: 120.9334
-            }
+            { name: "qijin", label: "旗津區", lat: 22.6086, lon: 120.2719 },
+            { name: "chungli", label: "中壢區", lat: 24.9547, lon: 121.2260 },
+            { name: "yuchi", label: "魚池鄉", lat: 23.8886, lon: 120.9334 }
         ];
 
         const today = new Date();
         const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() - 2); // 前天
+        targetDate.setDate(today.getDate() - 2);
         const yyyy = targetDate.getFullYear();
         const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
         const dd = String(targetDate.getDate()).padStart(2, '0');
         const dateStr = `${yyyy}-${mm}-${dd}`;
 
+        function getColorForTemp(temp) {
+            if (temp < -20) return '#000080';
+            if (temp < -10) return '#0055ff';
+            if (temp < 0) return '#66ccff';
+            if (temp < 10) return '#ccffff';
+            if (temp < 20) return '#ffff99';
+            if (temp < 30) return '#ffaa33';
+            if (temp < 40) return '#ff5500';
+            return '#cc0000';
+        }
+
         locations.forEach(loc => {
-            // 即時天氣
             const nowUrl = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=Asia%2FTaipei`;
             fetch(nowUrl)
                 .then(res => res.json())
@@ -133,19 +113,25 @@
                     const desc = weatherText[code] || "未知天氣";
                     document.getElementById(`weather-now-${loc.name}`).innerText = `${temp}°C（體感 ${feel}°C），${desc}`;
                     document.getElementById(`now-update-${loc.name}`).innerText = `更新時間：${new Date().toLocaleString("zh-TW")}`;
-                })
-                .catch(() => {
-                    document.getElementById(`weather-now-${loc.name}`).innerText = "❌ 無法取得即時天氣";
                 });
 
-            // 折線圖（前天）
             const chartUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m&timezone=Asia%2FTaipei`;
             fetch(chartUrl)
                 .then(response => response.json())
                 .then(data => {
                     const temps = data.hourly.temperature_2m;
                     const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
-                    const ctx = document.getElementById(`chart-${loc.name}`).getContext('2d');
+                    const canvas = document.getElementById(`chart-${loc.name}`);
+                    const ctx = canvas.getContext('2d');
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#cc0000');
+                    gradient.addColorStop(0.2, '#ff5500');
+                    gradient.addColorStop(0.4, '#ffaa33');
+                    gradient.addColorStop(0.6, '#ffff99');
+                    gradient.addColorStop(0.8, '#66ccff');
+                    gradient.addColorStop(1, '#0055ff');
+
                     new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -153,12 +139,16 @@
                             datasets: [{
                                 label: '氣溫（°C）',
                                 data: temps,
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: '#888',
+                                backgroundColor: gradient,
                                 fill: true,
                                 tension: 0.3,
-                                pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointRadius: 3,
+                                pointHoverRadius: 6,
+                                segment: {
+                                    borderColor: ctx => getColorForTemp(ctx.p1.parsed.y)
+                                },
+                                pointBackgroundColor: temps.map(t => getColorForTemp(t))
                             }]
                         },
                         options: {
@@ -183,13 +173,8 @@
                     });
 
                     document.getElementById(`chart-update-${loc.name}`).innerText = `更新時間：${new Date().toLocaleString("zh-TW")}`;
-                })
-                .catch(() => {
-                    document.getElementById(`chart-${loc.name}`).remove();
-                    document.getElementById(`chart-update-${loc.name}`).innerText = "❌ 無法取得氣溫圖資料";
                 });
         });
     </script>
-
 </body>
 </html>
