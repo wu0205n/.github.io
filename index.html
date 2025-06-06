@@ -33,23 +33,32 @@
     </div>
 
     <script>
-        const apiKey = "f508798d0a8679b9b4b7931c1b9a24e";  // 你的新 API 金鑰
-        const lat = 22.6086;
-        const lon = 120.2719;
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_tw`;
+        const weatherText = {
+            0: "☀ 晴朗",
+            1: "🌤 大致晴朗",
+            2: "⛅ 多雲",
+            3: "☁ 陰天",
+            45: "🌫 霧",
+            48: "🌫 霧霾",
+            51: "🌦 毛毛雨",
+            61: "🌧 小雨",
+            63: "🌧 中雨",
+            65: "🌧 大雨",
+            71: "❄ 小雪",
+            80: "🌧 短暫陣雨",
+            95: "⛈ 雷雨",
+        };
 
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error("API 回應錯誤");
-                return response.json();
-            })
+        fetch("https://api.open-meteo.com/v1/forecast?latitude=22.6086&longitude=120.2719&current=temperature_2m,weather_code&timezone=Asia%2FTaipei")
+            .then(res => res.json())
             .then(data => {
-                const temp = data.main.temp.toFixed(1);
-                const desc = data.weather[0].description;
+                const temp = data.current.temperature_2m.toFixed(1);
+                const code = data.current.weather_code;
+                const desc = weatherText[code] || "未知天氣";
                 document.getElementById("weather").innerText = `${temp}°C，${desc}`;
             })
             .catch(() => {
-                document.getElementById("weather").innerText = "❌ 無法取得天氣資料，請稍後再試。";
+                document.getElementById("weather").innerText = "❌ 無法取得天氣資料";
             });
     </script>
 
