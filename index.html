@@ -3,12 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <title>嗨</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .weather-box {
+            padding: 15px;
+            background-color: #e0f7fa;
+            border-radius: 8px;
+            width: fit-content;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
+
     <h1>高雄科技大學 海事資訊科技系</h1>
-
     <h2>📘 專題名稱：GitHub Pages 靜態網站部署與展示</h2>
-
     <p><strong>成員：</strong>吳曜恩、郭晉銘、蕭傑睿、高煜欽</p>
+
+    <div class="weather-box">
+        <h3>📡 旗津區（22.6086°N, 120.2719°E）目前天氣：</h3>
+        <p id="weather">載入中...</p>
+    </div>
+
+    <script>
+        const apiKey = "feec20b7356c14a56d53020616dc5886";
+        const lat = 22.6086;
+        const lon = 120.2719;
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_tw`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("API 回應錯誤");
+                return response.json();
+            })
+            .then(data => {
+                const temp = data.main.temp.toFixed(1);
+                const desc = data.weather[0].description;
+                document.getElementById("weather").innerText = `${temp}°C，${desc}`;
+            })
+            .catch(() => {
+                document.getElementById("weather").innerText = "❌ 無法取得天氣資料，請稍後再試。";
+            });
+    </script>
+
 </body>
 </html>
