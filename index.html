@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>嗨</title>
+    <title>多地天氣展示</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,24 +13,66 @@
         h1, h2, h3 {
             color: #2c3e50;
         }
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
         .weather-box {
             padding: 15px;
             background-color: #e0f7fa;
             border-radius: 8px;
-            width: fit-content;
-            margin-top: 20px;
+        }
+        .update-time {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
 
     <h1>高雄科技大學 海事資訊科技系</h1>
-    <h2>📘 專題名稱：GitHub Pages 靜態網站部署與展示</h2>
+    <h2>專題名稱：GitHub Pages 靜態網站部署與展示</h2>
     <p><strong>成員：</strong>吳曜恩、郭晉銘、蕭傑睿、高煜欽</p>
 
-    <div class="weather-box">
-        <h3>📡 旗津區（22.6086°N, 120.2719°E）目前天氣：</h3>
-        <p id="weather">載入中...</p>
+    <div class="weather-grid">
+
+        <!-- 旗津 -->
+        <div class="weather-box">
+            <h3>📍 旗津區目前天氣：</h3>
+            <p id="weather-now-qijin">載入中...</p>
+            <p id="now-update-qijin" class="update-time"></p>
+            <h3>📈 前天氣溫折線圖</h3>
+            <canvas id="chart-qijin"></canvas>
+            <p id="chart-update-qijin" class="update-time"></p>
+        </div>
+
+        <!-- 中壢 -->
+        <div class="weather-box">
+            <h3>📍 中壢區目前天氣：</h3>
+            <p id="weather-now-chungli">載入中...</p>
+            <p id="now-update-chungli" class="update-time"></p>
+            <h3>📈 前天氣溫折線圖</h3>
+            <canvas id="chart-chungli"></canvas>
+            <p id="chart-update-chungli" class="update-time"></p>
+        </div>
+
+        <!-- 魚池鄉 -->
+        <div class="weather-box">
+            <h3>📍 魚池鄉目前天氣：</h3>
+            <p id="weather-now-yuchi">載入中...</p>
+            <p id="now-update-yuchi" class="update-time"></p>
+            <h3>📈 前天氣溫折線圖</h3>
+            <canvas id="chart-yuchi"></canvas>
+            <p id="chart-update-yuchi" class="update-time"></p>
+        </div>
+
     </div>
 
     <script>
@@ -46,20 +89,106 @@
             65: "🌧 大雨",
             71: "❄ 小雪",
             80: "🌧 短暫陣雨",
-            95: "⛈ 雷雨",
+            95: "⛈ 雷雨"
         };
 
-        fetch("https://api.open-meteo.com/v1/forecast?latitude=22.6086&longitude=120.2719&current=temperature_2m,weather_code&timezone=Asia%2FTaipei")
-            .then(res => res.json())
-            .then(data => {
-                const temp = data.current.temperature_2m.toFixed(1);
-                const code = data.current.weather_code;
-                const desc = weatherText[code] || "未知天氣";
-                document.getElementById("weather").innerText = `${temp}°C，${desc}`;
-            })
-            .catch(() => {
-                document.getElementById("weather").innerText = "❌ 無法取得天氣資料";
-            });
+        const locations = [
+            {
+                name: "qijin",
+                label: "旗津區",
+                lat: 22.6086,
+                lon: 120.2719
+            },
+            {
+                name: "chungli",
+                label: "中壢區",
+                lat: 24.9547,
+                lon: 121.2260
+            },
+            {
+                name: "yuchi",
+                label: "魚池鄉",
+                lat: 23.8886,
+                lon: 120.9334
+            }
+        ];
+
+        const today = new Date();
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - 2); // 前天
+        const yyyy = targetDate.getFullYear();
+        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(targetDate.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+
+        locations.forEach(loc => {
+            // 即時天氣
+            const nowUrl = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=Asia%2FTaipei`;
+            fetch(nowUrl)
+                .then(res => res.json())
+                .then(data => {
+                    const temp = data.current.temperature_2m.toFixed(1);
+                    const feel = data.current.apparent_temperature.toFixed(1);
+                    const code = data.current.weather_code;
+                    const desc = weatherText[code] || "未知天氣";
+                    document.getElementById(`weather-now-${loc.name}`).innerText = `${temp}°C（體感 ${feel}°C），${desc}`;
+                    document.getElementById(`now-update-${loc.name}`).innerText = `更新時間：${new Date().toLocaleString("zh-TW")}`;
+                })
+                .catch(() => {
+                    document.getElementById(`weather-now-${loc.name}`).innerText = "❌ 無法取得即時天氣";
+                });
+
+            // 折線圖（前天）
+            const chartUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m&timezone=Asia%2FTaipei`;
+            fetch(chartUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const temps = data.hourly.temperature_2m;
+                    const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+                    const ctx = document.getElementById(`chart-${loc.name}`).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: hours,
+                            datasets: [{
+                                label: '氣溫（°C）',
+                                data: temps,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: true },
+                                title: {
+                                    display: true,
+                                    text: `${loc.label} ${dateStr} 每小時氣溫變化圖`
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    title: { display: true, text: '氣溫（°C）' }
+                                },
+                                x: {
+                                    title: { display: true, text: '時間（小時）' }
+                                }
+                            }
+                        }
+                    });
+
+                    document.getElementById(`chart-update-${loc.name}`).innerText = `更新時間：${new Date().toLocaleString("zh-TW")}`;
+                })
+                .catch(() => {
+                    document.getElementById(`chart-${loc.name}`).remove();
+                    document.getElementById(`chart-update-${loc.name}`).innerText = "❌ 無法取得氣溫圖資料";
+                });
+        });
     </script>
 
 </body>
